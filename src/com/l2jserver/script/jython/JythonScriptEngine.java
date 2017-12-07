@@ -27,8 +27,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Serializable;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 import javax.script.AbstractScriptEngine;
@@ -59,7 +57,7 @@ public class JythonScriptEngine extends AbstractScriptEngine implements Compilab
 {
 	
 	// my factory, may be null
-	private ScriptEngineFactory factory;
+	private ScriptEngineFactory _factory;
 	
 	// my scope -- associated with the default context
 	private PyObject myScope;
@@ -227,14 +225,10 @@ public class JythonScriptEngine extends AbstractScriptEngine implements Compilab
 		return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]
 		{
 			clazz
-		}, new InvocationHandler()
+		}, (proxy, m, args) ->
 		{
-			@Override
-			public Object invoke(Object proxy, Method m, Object args[]) throws Throwable
-			{
-				Object res = invokeImpl(thiz, m.getName(), args);
-				return py2java(java2py(res), m.getReturnType());
-			}
+			Object res = invokeImpl(thiz, m.getName(), args);
+			return py2java(java2py(res), m.getReturnType());
 		});
 	}
 	
@@ -257,12 +251,12 @@ public class JythonScriptEngine extends AbstractScriptEngine implements Compilab
 	{
 		synchronized (this)
 		{
-			if (factory == null)
+			if (_factory == null)
 			{
-				factory = new JythonScriptEngineFactory();
+				_factory = new JythonScriptEngineFactory();
 			}
 		}
-		return factory;
+		return _factory;
 	}
 	
 	@Override
@@ -282,7 +276,7 @@ public class JythonScriptEngine extends AbstractScriptEngine implements Compilab
 	// package-private methods
 	void setFactory(ScriptEngineFactory factory)
 	{
-		this.factory = factory;
+		_factory = factory;
 	}
 	
 	static PyObject java2py(Object javaObj)

@@ -40,11 +40,11 @@ import org.python.core.PyString;
 public final class JythonScope extends PyObject
 {
 	private static final long serialVersionUID = 1L;
-	private final ScriptContext ctx;
+	private final ScriptContext _ctx;
 	
 	JythonScope(ScriptEngine engine, ScriptContext ctx)
 	{
-		this.ctx = ctx;
+		_ctx = ctx;
 		
 		// global module's name is expected to be 'main'
 		__setitem__("__name__", new PyString("main"));
@@ -64,12 +64,12 @@ public final class JythonScope extends PyObject
 			// special case for "keys" so that dir() will
 			// work for the global "module"
 			PyList keys = new PyList();
-			synchronized (ctx)
+			synchronized (_ctx)
 			{
-				List<Integer> scopes = ctx.getScopes();
+				List<Integer> scopes = _ctx.getScopes();
 				for (int scope : scopes)
 				{
-					Bindings b = ctx.getBindings(scope);
+					Bindings b = _ctx.getBindings(scope);
 					if (b != null)
 					{
 						for (String key : b.keySet())
@@ -93,14 +93,14 @@ public final class JythonScope extends PyObject
 	@Override
 	public synchronized PyObject __finditem__(String key)
 	{
-		synchronized (ctx)
+		synchronized (_ctx)
 		{
-			int scope = ctx.getAttributesScope(key);
+			int scope = _ctx.getAttributesScope(key);
 			if (scope == -1)
 			{
 				return null;
 			}
-			Object value = ctx.getAttribute(key, scope);
+			Object value = _ctx.getAttribute(key, scope);
 			return JythonScriptEngine.java2py(value);
 		}
 	}
@@ -114,9 +114,9 @@ public final class JythonScope extends PyObject
 	@Override
 	public synchronized void __setitem__(String key, PyObject value)
 	{
-		synchronized (ctx)
+		synchronized (_ctx)
 		{
-			int scope = ctx.getAttributesScope(key);
+			int scope = _ctx.getAttributesScope(key);
 			if (scope == -1)
 			{
 				scope = ScriptContext.ENGINE_SCOPE;
@@ -126,7 +126,7 @@ public final class JythonScope extends PyObject
 			{
 				obj = JythonScriptEngine.py2java(value);
 			}
-			ctx.setAttribute(key, obj, scope);
+			_ctx.setAttribute(key, obj, scope);
 		}
 	}
 	
@@ -139,12 +139,12 @@ public final class JythonScope extends PyObject
 	@Override
 	public synchronized void __delitem__(String key)
 	{
-		synchronized (ctx)
+		synchronized (_ctx)
 		{
-			int scope = ctx.getAttributesScope(key);
+			int scope = _ctx.getAttributesScope(key);
 			if (scope != -1)
 			{
-				ctx.removeAttribute(key, scope);
+				_ctx.removeAttribute(key, scope);
 			}
 		}
 	}
